@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production Performance Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Preconnect for Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app-shell">
+    <div id="content-wrapper">
+      <header>
+        <div class="header-left">
+          <div class="logo-wrap">
+            <svg class="icon-s" style="color:var(--accent-blue)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            <div>
+              <div class="logo" id="mainTitle">PRODUCTION PERFORMANCE <span style="font-size: 10px; opacity: 0.5;">v2.1</span></div>
+              <div class="sub-logo">Extrusion & Zipper Dashboard 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-center">
+          <div class="header-info-item">
+            <span class="header-info-lbl" data-en="LIVE TIME" data-bn="লাইভ সময়">LIVE TIME</span>
+            <span class="header-info-val"><span id="liveTime">--:--:--</span> <span class="live-dot"></span> <span style="font-size:8px; color:var(--accent-green); margin-left:3px;">LIVE</span></span>
+          </div>
+          <div class="header-info-item">
+            <span class="header-info-lbl" data-en="DATE" data-bn="তারিখ">DATE</span>
+            <div class="date-box">
+              <svg class="icon-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span id="headerDate" style="font-size:12px; font-weight:700;">-- --- ----</span>
+              <svg class="icon-s" style="width:10px; opacity:0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+          <div class="header-info-item">
+            <span class="header-info-lbl" data-en="SHIFT" data-bn="শিফট">SHIFT</span>
+            <div class="shift-group">
+              <button class="shift-btn active" id="shiftDay">☀️ DAY</button>
+              <button class="shift-btn" id="shiftNight">🌙 NIGHT</button>
+              <button class="shift-btn" id="shift24h">📅 24H</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="header-info-item" style="text-align: right; margin-right: 5px; border:none;">
+            <span class="header-info-lbl" data-en="LAST UPDATE" data-bn="সর্বশেষ আপডেট">LAST UPDATE</span>
+            <span class="header-info-val" style="color:var(--accent-green)"><span id="lastUpdated">--:--:--</span> <span class="live-dot"></span></span>
+          </div>
+          <button id="refreshBtn" class="header-icon-btn">🔄</button>
+          <button id="presModeBtn" class="header-icon-btn">📺</button>
+          <button id="prevSlideHeader" class="header-icon-btn">❮</button>
+          <button id="nextSlideHeader" class="header-icon-btn">❯</button>
+          <button id="playPauseBtn" class="header-icon-btn">⏸️</button>
+          <button id="settingsBtn" class="header-icon-btn">⚙️</button>
+        </div>
+      </header>
+
+      <main>
+        <div class="slides-container">
+          <!-- Slide 0: Overall Summary (Pure Dashboard) -->
+          <section class="slide active" id="slide-0">
+            <!-- Row 1: Top KPI Cards -->
+            <div class="kpi-row">
+              <div class="kpi-card blue">
+                <div class="kpi-header">
+                  <div class="kpi-lbl" data-en="TARGET" data-bn="লক্ষ্যমাত্রা">TARGET</div>
+                  <div class="kpi-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-s" style="width:20px; height:20px;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                  </div>
+                </div>
+                <div class="kpi-val-group">
+                   <div class="kpi-val" id="sum-total-target">0</div>
+                   <div class="kpi-unit">KGS</div>
+                </div>
+                <div class="kpi-sub" data-en="Today's Target" data-bn="আজকের লক্ষ্যমাত্রা">Today's Target</div>
+                <svg class="kpi-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M0,25 Q10,15 20,20 T40,10 T60,25 T80,5 T100,20" fill="none" stroke="var(--accent-blue)" stroke-width="1.5" opacity="0.6"/></svg>
+              </div>
+
+              <div class="kpi-card green">
+                <div class="kpi-header">
+                  <div class="kpi-lbl" data-en="PRODUCTION" data-bn="উৎপাদন">PRODUCTION</div>
+                  <div class="kpi-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-s" style="width:20px; height:20px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                  </div>
+                </div>
+                <div class="kpi-val-group">
+                   <div class="kpi-val" id="sum-total-prod">0</div>
+                   <div class="kpi-unit">KGS</div>
+                </div>
+                <div class="kpi-sub" data-en="Total Production" data-bn="মোট উৎপাদন">Total Production</div>
+                <svg class="kpi-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M0,20 Q15,25 30,15 T50,20 T70,10 T85,25 T100,15" fill="none" stroke="var(--accent-green)" stroke-width="1.5" opacity="0.6"/></svg>
+              </div>
+
+              <div class="kpi-card orange">
+                <div class="kpi-header">
+                  <div class="kpi-lbl" data-en="ACHIEVEMENT" data-bn="অর্জিত">ACHIEVEMENT</div>
+                  <div class="kpi-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-s" style="width:20px; height:20px;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55.47.98.97 1.21C11.47 18.44 12 19 12 19s.53-.56 1.03-.79c.5-.23.97-.66.97-1.21v-2.34"></path><path d="M12 15a5 5 0 1 0-5-5"></path></svg>
+                  </div>
+                </div>
+                <div class="kpi-val-group">
+                   <div class="kpi-val" id="sum-total-pct">0%</div>
+                </div>
+                <div class="kpi-sub" data-en="Achievement %" data-bn="অর্জিত হার %">Achievement %</div>
+                <svg class="kpi-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M0,15 Q20,5 40,25 T60,10 T80,20 T100,5" fill="none" stroke="var(--accent-orange)" stroke-width="1.5" opacity="0.6"/></svg>
+              </div>
+
+              <div class="kpi-card yellow">
+                <div class="kpi-header">
+                  <div class="kpi-lbl" data-en="BALANCE" data-bn="বাকি">BALANCE</div>
+                  <div class="kpi-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="icon-s" style="width:20px; height:20px;"><path d="M16 3h5v5"></path><path d="M8 3H3v5"></path><path d="M12 21v-2"></path><path d="M12 17v-2"></path><path d="M12 13v-2"></path><path d="M12 9V7"></path><circle cx="12" cy="5" r="2"></circle><path d="M20 12h-2"></path><path d="M14 12h-2"></path><path d="M8 12H6"></path><path d="M4 12H2"></path></svg>
+                  </div>
+                </div>
+                <div class="kpi-val-group">
+                   <div class="kpi-val" id="sum-total-rem">0</div>
+                   <div class="kpi-unit">KGS</div>
+                </div>
+                <div class="kpi-sub" data-en="Balance Quantity" data-bn="অবশিষ্ট পরিমাণ">Balance Quantity</div>
+                <svg class="kpi-sparkline" viewBox="0 0 100 30" preserveAspectRatio="none"><path d="M0,25 Q15,10 30,20 T50,5 T70,25 T90,10 T100,20" fill="none" stroke="#facc15" stroke-width="1.5" opacity="0.6"/></svg>
+              </div>
+            </div>
+
+            <!-- Row 1.5: Live Ticker -->
+            <div class="ticker-row">
+              <div class="ticker-wrap">
+                <div class="ticker" id="live-ticker">
+                  <div class="ticker-item">Synchronizing live machine performance data...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: Charts & Quick Stats -->
+            <div class="mid-row">
+              <!-- Panel 1: Hourly Production Trend -->
+              <div class="panel">
+                <div class="panel-head">
+                  <div class="panel-title" data-en="HOURLY PRODUCTION TREND (KGS)" data-bn="ঘণ্টায় উৎপাদনের প্রবণতা">HOURLY PRODUCTION TREND (KGS)</div>
+                  <div style="display:flex; gap:15px; font-size:11px; font-weight:700;">
+                    <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:3px; background:var(--accent-green); border-radius:2px;"></div><span>Production</span></div>
+                    <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:3px; background:var(--accent-blue); border-radius:2px; border-top:1px dashed #fff;"></div><span>Target</span></div>
+                  </div>
+                </div>
+                <div style="flex:1; position:relative; margin-top:15px; display:flex;">
+                  <!-- Y-Axis Labels -->
+                  <div style="display:flex; flex-direction:column; justify-content:space-between; padding-right:10px; font-size:10px; font-weight:700; color:var(--text-muted); text-align:right; width:30px; padding-bottom:30px;">
+                    <span>20K</span><span>15K</span><span>10K</span><span>5K</span><span>0</span>
+                  </div>
+                  
+                  <div style="flex:1; position:relative;">
+                    <!-- Grid Lines -->
+                    <div style="position:absolute; width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; padding-bottom:30px; box-sizing:border-box; pointer-events:none;">
+                      <div style="width:100%; height:1px; background:rgba(255,255,255,0.05);"></div>
+                      <div style="width:100%; height:1px; background:rgba(255,255,255,0.05);"></div>
+                      <div style="width:100%; height:1px; background:rgba(255,255,255,0.05);"></div>
+                      <div style="width:100%; height:1px; background:rgba(255,255,255,0.05);"></div>
+                      <div style="width:100%; height:1px; background:rgba(255,255,255,0.1);"></div>
+                    </div>
+
+                    <svg id="hourly-chart-svg" style="width:100%; height:calc(100% - 30px); display:block;" viewBox="0 0 400 120" preserveAspectRatio="none">
+                      <!-- Target Line (Dashed) -->
+                      <path id="hourly-target-path" d="" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+                      
+                      <!-- Production Area & Line -->
+                      <path id="hourly-prod-area" d="" fill="url(#gradGreen)" opacity="0.1"/>
+                      <path id="hourly-prod-path" d="" fill="none" stroke="var(--accent-green)" stroke-width="3" stroke-linecap="round"/>
+                      
+                      <!-- Active Point -->
+                      <line id="hourly-focus-line" x1="-100" y1="0" x2="-100" y2="120" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                      <circle id="hourly-focus-dot" cx="-100" cy="-100" r="6" fill="var(--accent-green)" stroke="#fff" stroke-width="2"/>
+                    </svg>
+
+                    <!-- Tooltip -->
+                    <div id="hourly-tooltip" style="position:absolute; display:none; background:rgba(15,23,42,0.9); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:11px; backdrop-filter:blur(5px); z-index:10; box-shadow:0 10px 20px rgba(0,0,0,0.4); pointer-events:none;">
+                       <div id="tt-time" style="font-weight:800; margin-bottom:5px; color:var(--text-main)">--:--</div>
+                       <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;"><div style="width:8px; height:8px; border-radius:50%; background:var(--accent-green);"></div><span id="tt-prod">Production: 0</span></div>
+                       <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px; height:8px; border-radius:50%; background:var(--accent-blue);"></div><span id="tt-tgt">Target: 0</span></div>
+                    </div>
+
+                    <!-- Labels -->
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; font-weight:700; color:var(--text-muted); padding-left:10px;">
+                      <span>06:00</span><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel 2: Target vs Production -->
+              <div class="panel">
+                <div class="panel-head">
+                  <div class="panel-title" data-en="TARGET vs PRODUCTION (KGS)" data-bn="লক্ষ্যমাত্রা বনাম উৎপাদন">TARGET vs PRODUCTION (KGS)</div>
+                </div>
+                <div style="flex:1; display:flex; justify-content:space-around; align-items:flex-end; padding-top:20px; position:relative;">
+                   <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                      <div style="display:flex; align-items:flex-end; gap:6px;">
+                        <div style="width:18px; height:90px; background:var(--accent-blue); border-radius:4px 4px 0 0; box-shadow:0 0 15px var(--glow-blue);"></div>
+                        <div style="width:18px; height:75px; background:var(--accent-green); border-radius:4px 4px 0 0; box-shadow:0 0 15px var(--glow-green);"></div>
+                      </div>
+                      <span style="font-size:13px; font-weight:800; color:var(--text-muted)">EXT</span>
+                   </div>
+                   <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                      <div style="display:flex; align-items:flex-end; gap:6px;">
+                        <div style="width:18px; height:50px; background:var(--accent-blue); border-radius:4px 4px 0 0; opacity:0.8;"></div>
+                        <div style="width:18px; height:40px; background:var(--accent-green); border-radius:4px 4px 0 0; opacity:0.8;"></div>
+                      </div>
+                      <span style="font-size:13px; font-weight:800; color:var(--text-muted)">ZIP</span>
+                   </div>
+                   <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                      <div style="display:flex; align-items:flex-end; gap:6px;">
+                        <div style="width:18px; height:35px; background:var(--accent-blue); border-radius:4px 4px 0 0; opacity:0.6;"></div>
+                        <div style="width:18px; height:25px; background:var(--accent-green); border-radius:4px 4px 0 0; opacity:0.6;"></div>
+                      </div>
+                      <span style="font-size:13px; font-weight:800; color:var(--text-muted)">CUT</span>
+                   </div>
+                </div>
+              </div>
+
+              <!-- Panel 3: Breakdown Analysis -->
+              <div class="panel">
+                <div class="panel-head">
+                  <div class="panel-title" data-en="BREAKDOWN ANALYSIS" data-bn="ব্রেকডাউন বিশ্লেষণ">BREAKDOWN ANALYSIS</div>
+                </div>
+                <div style="flex:1; display:flex; align-items:center; gap:20px;">
+                   <div style="position:relative; width:130px; height:130px;">
+                      <svg viewBox="0 0 36 36" style="width:130px; height:130px; transform:rotate(-90deg);">
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--accent-red)" stroke-width="4.5" stroke-dasharray="100" />
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--accent-blue)" stroke-width="4.5" stroke-dasharray="35, 100" />
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--accent-orange)" stroke-width="4.5" stroke-dasharray="25, 100" stroke-dashoffset="-35" />
+                      </svg>
+                      <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                        <span style="font-size:12px; color:var(--text-muted); font-weight:700;">Total</span>
+                        <span style="font-size:20px; font-weight:900;">4h 35m</span>
+                      </div>
+                   </div>
+                   <div style="display:flex; flex-direction:column; gap:12px;">
+                      <div style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700;">
+                        <div style="width:10px; height:10px; border-radius:2px; background:var(--accent-red);"></div>
+                        <span>Extrusion</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700;">
+                        <div style="width:10px; height:10px; border-radius:2px; background:var(--accent-orange);"></div>
+                        <span>Cutting</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700;">
+                        <div style="width:10px; height:10px; border-radius:2px; background:var(--accent-blue);"></div>
+                        <span>Zipper</span>
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+              <!-- Panel 4: Quick Stats -->
+              <div class="panel">
+                <div class="panel-head">
+                  <div class="panel-title" data-en="QUICK STATS" data-bn="কুইক স্ট্যাট">QUICK STATS</div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:15px; margin-top:10px;">
+                  <div style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;"><span style="color:var(--text-muted); font-weight:700;">Total Machines</span><span id="stat-total" style="font-weight:900;">0</span></div>
+                  <div style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;"><span style="color:var(--text-muted); font-weight:700;">Running</span><span id="stat-run" style="color:var(--accent-green); font-weight:900;">0</span></div>
+                  <div style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;"><span style="color:var(--text-muted); font-weight:700;">Idle</span><span id="stat-idle" style="color:var(--accent-orange); font-weight:900;">0</span></div>
+                  <div style="display:flex; justify-content:space-between; font-size:16px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;"><span style="color:var(--text-muted); font-weight:700;">Breakdown</span><span id="stat-bd" style="color:var(--accent-red); font-weight:900;">0</span></div>
+                  <div style="display:flex; justify-content:space-between; font-size:16px; padding-top:8px;"><span style="color:var(--text-muted); font-weight:700;">Efficiency</span><span style="color:var(--accent-cyan); font-weight:900;">78.4%</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Slide 1: Extrusion Detailed View -->
+          <section class="slide" id="slide-1">
+            <div class="section-block" style="height:100%;">
+              <div class="m-grid-compact" id="ex-grid"></div>
+            </div>
+          </section>
+
+          <!-- Slide 2: Zipper Detailed View -->
+          <section class="slide" id="slide-2">
+            <div class="section-block" style="height:100%;">
+              <div class="m-grid-compact" id="zp-grid"></div>
+            </div>
+          </section>
+
+          <!-- Slide Focus: Single Machine Detail -->
+          <section class="slide" id="slide-focus">
+            <div id="focus-container" style="height:100%; display:flex; align-items:center; justify-content:center;">
+              <!-- Dynamic content here -->
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer>
+        <div class="footer-status">
+          <span data-en="System Status: All Systems Operational" data-bn="সিস্টেম স্ট্যাটাস: সব সিস্টেম সচল রয়েছে">System Status: All Systems Operational</span>
+        </div>
+        <div style="flex:1; text-align:center; font-size:11px; color:var(--text-muted);">
+          🛡️ Safety First, Quality Always
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">
+           Auto Refresh: 30 sec
+        </div>
+      </footer>
+
+      <!-- Presentation Mode Overlay -->
+      <div id="presentationMode">
+        <!-- (Simplified for now to match high-density focus) -->
+      </div>
+    </div> <!-- end content-wrapper -->
+
+    <!-- Dashboard Controller (Side Panel) -->
+    <aside id="settingsModal" class="side-panel">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3 style="color:var(--accent-blue);" data-en="DASHBOARD CONTROLLER" data-bn="ড্যাশবোর্ড কন্ট্রোলার">DASHBOARD CONTROLLER</h3>
+          <button id="closeModalBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Slide Toggles -->
+          <div class="control-btns" id="slideToggles">
+            <!-- Dynamic checkboxes will go here -->
+          </div>
+
+          <hr style="opacity:0.1; margin:20px 0;">
+
+          <!-- Language -->
+          <div class="setting-item">
+            <label data-en="Language" data-bn="ভাষা">Language</label>
+            <select id="langSelect" class="st-input">
+              <option value="en">English</option>
+              <option value="bn">বাংলা (Bengali)</option>
+            </select>
+          </div>
+
+          <!-- Zoom Level -->
+          <div class="setting-item">
+            <div class="st-label-row">
+              <label data-en="Zoom Level" data-bn="জুম লেভেল">Zoom Level</label>
+              <span id="zoomVal">100%</span>
+            </div>
+            <input type="range" id="zoomRange" min="50" max="150" value="100" class="st-range">
+          </div>
+
+          <!-- Slide Speed -->
+          <div class="setting-item">
+            <div class="st-label-row">
+              <label data-en="Slide Speed" data-bn="স্লাইড স্পিড">Slide Speed</label>
+              <span id="slideSpeedVal">15s</span>
+            </div>
+            <input type="range" id="slideSpeedRange" min="5" max="300" value="15" class="st-range">
+          </div>
+
+          <!-- Scroll Speed (Ticker) -->
+          <div class="setting-item">
+            <div class="st-label-row">
+              <label data-en="Scroll Speed" data-bn="স্ক্রল স্পিড">Scroll Speed</label>
+              <span id="scrollSpeedVal">60s</span>
+            </div>
+            <input type="range" id="scrollSpeedRange" min="10" max="300" value="60" class="st-range">
+          </div>
+
+          <!-- Auto Slide -->
+          <div class="setting-item" style="flex-direction:row; justify-content:space-between; align-items:center; margin-top:10px;">
+            <label data-en="Enable Auto-Slide" data-bn="অটো স্লাইড চালু করুন">Enable Auto-Slide</label>
+            <input type="checkbox" id="autoSlideCheck" checked>
+          </div>
+
+          <div class="modal-footer-btns">
+            <button class="btn-st" id="exportBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-s"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Export Config</span>
+            </button>
+            <button class="btn-st" id="testConnBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-s"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span>Test Live Data</span>
+            </button>
+          </div>
+          <!-- Connection status text -->
+          <div id="connectionStatus" style="margin-top:10px; font-size:14px; font-weight:700; color:var(--accent-green); text-align:center; display:none;"></div>
+
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
