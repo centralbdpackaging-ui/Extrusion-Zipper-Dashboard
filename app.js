@@ -425,21 +425,31 @@ function processRawData(response) {
   const processed = {
     machines: { "Extrusion": [], "Zipper": [] },
     hourlyTrends: response.hourlyTrends || [], // Captured from live sheet
-    rawFiltered: response.rawData,
+    rawFiltered: [],
     lastUpdated: new Date().toLocaleTimeString()
   };
 
   response.rawData.forEach(row => {
+    let rawId = row["Machine No"] || row["id"];
+    if (!rawId || String(rawId).trim() === '') return; // Skip empty rows
+
+    let rawStatus = String(row["Machine Status"] || '').trim().toLowerCase();
+    if (rawStatus === '') rawStatus = 'idle';
+
     let m = { 
-      id: row["Machine No"] || row["id"], 
+      id: rawId, 
       prod: parseFloat(row["Total Production Kgs"]) || 0, 
       target: parseFloat(row["Target Kgs"]) || 0, 
-      status: String(row["Machine Status"] || 'run').toLowerCase(),
+      status: rawStatus,
       reason: row["Reason of Idle"] || row["Breakdown Type"] || ''
     };
     
-    if (m.id && m.id.toUpperCase().includes('EXT')) processed.machines.Extrusion.push(m);
-    else if (m.id && m.id.toUpperCase().includes('ZIP')) processed.machines.Zipper.push(m);
+    // Update the row object so other functions relying on rawFiltered have the correct status
+    row["Machine Status"] = rawStatus === 'idle' ? 'Idle' : row["Machine Status"];
+    processed.rawFiltered.push(row);
+
+    if (m.id.toUpperCase().includes('EXT')) processed.machines.Extrusion.push(m);
+    else if (m.id.toUpperCase().includes('ZIP')) processed.machines.Zipper.push(m);
   });
 
   // Sorting by achievement percentage (large to small)
@@ -496,6 +506,31 @@ function renderAllSlides() {
   safeSetText('stat-run', tRun);
   safeSetText('stat-idle', tIdle);
   safeSetText('stat-bd', tBD);
+  safeSetText('stat-eff', tPct + '%');
+
+  // Breakdown Analysis Chart Update
+  const bdEx = data.machines.Extrusion.filter(m => m.status.includes('breakdown') || m.status.includes('bd')).length;
+  const bdZp = data.machines.Zipper.filter(m => m.status.includes('breakdown') || m.status.includes('bd')).length;
+  const bdTotal = bdEx + bdZp;
+  
+  const circleEx = document.getElementById('bd-circle-ex');
+  const circleZp = document.getElementById('bd-circle-zp');
+  const bdTimeText = document.getElementById('stat-bd-time');
+
+  if (bdTotal > 0) {
+    const exPct = (bdEx / bdTotal) * 100;
+    const zpPct = (bdZp / bdTotal) * 100;
+    if (circleEx) circleEx.setAttribute('stroke-dasharray', `${exPct}, 100`);
+    if (circleZp) {
+       circleZp.setAttribute('stroke-dasharray', `${zpPct}, 100`);
+       circleZp.setAttribute('stroke-dashoffset', -exPct);
+    }
+    if (bdTimeText) bdTimeText.innerText = bdTotal + (bdTotal > 1 ? ' Units' : ' Unit');
+  } else {
+    if (circleEx) circleEx.setAttribute('stroke-dasharray', `0, 100`);
+    if (circleZp) circleZp.setAttribute('stroke-dasharray', `0, 100`);
+    if (bdTimeText) bdTimeText.innerText = '0 Units';
+  }
 
   renderMachineGrid('ex-grid', data.machines.Extrusion);
   renderMachineGrid('zp-grid', data.machines.Zipper);
@@ -503,7 +538,63 @@ function renderAllSlides() {
   renderMasterDataTable(data.rawFiltered);
   renderLiveTicker();
   renderHourlyChart(data.hourlyTrends);
+  renderComparisonChart();
   applyLanguage();
+}
+
+function renderComparisonChart() {
+  const container = document.getElementById('comparison-bars');
+  if (!container || !State.data) return;
+
+  const data = State.data;
+  const sections = {
+    "EXT": { t: 0, p: 0 },
+    "ZIP": { t: 0, p: 0 }
+  };
+
+  data.rawFiltered.forEach(m => {
+    const id = (m["Machine No"] || m["id"] || "").toUpperCase();
+    let key = "EXT";
+    if (id.includes("ZIP")) key = "ZIP";
+    
+    if (sections[key]) {
+      sections[key].t += parseFloat(m["Target Kgs"]) || 0;
+      sections[key].p += parseFloat(m["Total Production Kgs"]) || 0;
+    }
+  });
+
+  // Dynamically find max target for scaling (so target bar looks "full")
+  const targets = Object.values(sections).map(s => s.t);
+  const maxVal = Math.max(...targets, 1000); 
+
+  // Update Y-Axis labels dynamically based on maxVal
+  const labelIds = [150, 120, 90, 60, 30];
+  labelIds.forEach(l => {
+    const el = document.getElementById(`y-label-${l}`);
+    if (el) {
+      const val = Math.round(maxVal * (l / 150));
+      el.innerText = val >= 1000 ? (val/1000).toFixed(1) + 'K' : val;
+    }
+  });
+
+  container.innerHTML = Object.keys(sections).map(key => {
+    const s = sections[key];
+    const tH = (s.t / maxVal) * 100;
+    const pH = (s.p / maxVal) * 100;
+
+    return `
+      <div style="display:flex; align-items:flex-end; gap:10px; height:100%; width:40%;">
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+          <div style="font-size:10px; font-weight:800; color:var(--accent-blue); margin-bottom:4px;">${Math.round(s.t).toLocaleString()}</div>
+          <div style="width:100%; height:${tH}%; background:var(--accent-blue); border-radius:4px 4px 0 0; box-shadow:0 0 10px var(--glow-blue);"></div>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+          <div style="font-size:10px; font-weight:800; color:var(--accent-green); margin-bottom:4px;">${Math.round(s.p).toLocaleString()}</div>
+          <div style="width:100%; height:${pH}%; background:var(--accent-green); border-radius:4px 4px 0 0; box-shadow:0 0 10px var(--glow-green);"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function renderHourlyChart(hourlyData) {
