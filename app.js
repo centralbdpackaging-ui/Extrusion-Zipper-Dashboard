@@ -663,7 +663,9 @@ function renderHourlyChart(hourlyData) {
     tt.style.display = 'block';
     tt.style.left = (fx + 10) + 'px';
     tt.style.top = (fy - 80) + 'px';
-    document.getElementById('tt-time').innerText = hourlyData[focusIdx].h + ' PM';
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    document.getElementById('tt-time').innerText = timeStr;
     document.getElementById('tt-prod').innerText = 'Production: ' + hourlyData[focusIdx].p.toLocaleString();
     document.getElementById('tt-tgt').innerText = 'Target: ' + hourlyData[focusIdx].t.toLocaleString();
   }
