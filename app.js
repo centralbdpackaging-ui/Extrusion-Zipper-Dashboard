@@ -11,7 +11,7 @@ const State = {
   slides: [],
   data: null,
   timer: null,
-  interval: 15000,
+  interval: 20000,
   selectedDate: new Date().toISOString().split('T')[0],
   selectedShift: 'Day',
   language: localStorage.getItem('dash_lang') || CONFIG.DEFAULT_LANGUAGE,
@@ -29,7 +29,7 @@ const State = {
 function init() {
   State.slides = document.querySelectorAll('.slide');
   setupEventListeners();
-  populateSettings();
+  applySettingsFromUI();
   updateClock();
   setInterval(updateClock, 1000);
   startDataUpdates();
@@ -74,13 +74,11 @@ function setupEventListeners() {
   const zoomRange = document.getElementById('zoomRange');
   const slideSpeedRange = document.getElementById('slideSpeedRange');
   const scrollSpeedRange = document.getElementById('scrollSpeedRange');
-  const autoSlideCheck = document.getElementById('autoSlideCheck');
-  const langSelect = document.getElementById('langSelect');
+  const focusSpeedRange = document.getElementById('focusSpeedRange');
   const testConnBtn = document.getElementById('testConnBtn');
+  const exportBtn = document.getElementById('exportBtn');
+
   if (testConnBtn) testConnBtn.onclick = testLiveConnection;
-
-
-  const importBtn = document.getElementById('importBtn');
 
   if (settingsBtn) settingsBtn.onclick = () => document.body.classList.add('settings-open');
   if (closeModalBtn) closeModalBtn.onclick = () => document.body.classList.remove('settings-open');
@@ -147,7 +145,7 @@ function setupEventListeners() {
     slideSpeedRange.oninput = (e) => {
       const val = e.target.value;
       document.getElementById('slideSpeedVal').innerText = val + 's';
-      State.slideInterval = val * 1000;
+      State.interval = val * 1000;
       resetAutoSlide();
     };
   }
@@ -162,24 +160,69 @@ function setupEventListeners() {
     };
   }
 
-  // Auto Slide Toggle
-  if (autoSlideCheck) {
-    autoSlideCheck.onchange = (e) => {
-      State.autoSlideEnabled = e.target.checked;
-      if (State.autoSlideEnabled) startAutoSlide();
-      else stopAutoSlide();
+  // Focus Speed
+  if (focusSpeedRange) {
+    focusSpeedRange.oninput = (e) => {
+      const val = e.target.value;
+      document.getElementById('focusSpeedVal').innerText = val + 's';
+      State.focusDuration = val * 1000;
     };
   }
 
-  // Language
-  if (langSelect) {
-    langSelect.onchange = (e) => {
-      State.language = e.target.value;
-      applyLanguage();
+  // Range Buttons
+  setupRangeBtn('slideSpeedMinus', 'slideSpeedPlus', 'slideSpeedRange', (val) => {
+    document.getElementById('slideSpeedVal').innerText = val + 's';
+    State.interval = val * 1000;
+    resetAutoSlide();
+  });
+
+  setupRangeBtn('scrollSpeedMinus', 'scrollSpeedPlus', 'scrollSpeedRange', (val) => {
+    document.getElementById('scrollSpeedVal').innerText = val + 's';
+    const ticker = document.getElementById('live-ticker');
+    if (ticker) ticker.style.animationDuration = val + 's';
+  });
+
+  setupRangeBtn('focusSpeedMinus', 'focusSpeedPlus', 'focusSpeedRange', (val) => {
+    document.getElementById('focusSpeedVal').innerText = val + 's';
+    State.focusDuration = val * 1000;
+  });
+
+  // Checkboxes
+  const checkSummary = document.getElementById('check-summary');
+  const checkMachines = document.getElementById('check-machines');
+  const checkFocus = document.getElementById('check-focus');
+
+  if (checkSummary) {
+    checkSummary.onchange = (e) => {
+      toggleSlide('slide-0', e.target.checked);
+      updateEnabledSlides();
+    };
+  }
+  if (checkMachines) {
+    checkMachines.onchange = (e) => {
+      toggleSlide('slide-1', e.target.checked);
+      toggleSlide('slide-2', e.target.checked);
+      updateEnabledSlides();
+    };
+  }
+  if (checkFocus) {
+    checkFocus.onchange = (e) => {
+      State.focusModeEnabled = e.target.checked;
     };
   }
 
-  // Export/Import
+  // Color Swatches
+  const swatches = document.querySelectorAll('.swatch');
+  swatches.forEach(s => {
+    s.onclick = () => {
+      swatches.forEach(sw => sw.classList.remove('active'));
+      s.classList.add('active');
+      const color = s.getAttribute('data-color');
+      document.documentElement.style.setProperty('--accent-blue', color);
+    };
+  });
+
+  // Export
   if (exportBtn) {
     exportBtn.onclick = () => {
       const config = JSON.stringify(State);
@@ -191,43 +234,76 @@ function setupEventListeners() {
       a.click();
     };
   }
+}
 
-  if (importBtn) {
-    importBtn.onclick = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (re) => {
-          Object.assign(State, JSON.parse(re.target.result));
-          populateSettings();
-          applyLanguage();
-          renderAllSlides();
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    };
+function setupRangeBtn(minusId, plusId, rangeId, callback) {
+  const minus = document.getElementById(minusId);
+  const plus = document.getElementById(plusId);
+  const range = document.getElementById(rangeId);
+
+  if (!minus || !plus || !range) return;
+
+  minus.onclick = () => {
+    const val = parseInt(range.value);
+    const min = parseInt(range.min);
+    if (val > min) {
+      range.value = val - 1;
+      callback(range.value);
+    }
+  };
+
+  plus.onclick = () => {
+    const val = parseInt(range.value);
+    const max = parseInt(range.max);
+    if (val < max) {
+      range.value = val + 1;
+      callback(range.value);
+    }
+  };
+}
+
+function updateEnabledSlides() {
+  State.enabledSlides = [];
+  if (document.getElementById('check-summary')?.checked) State.enabledSlides.push(0);
+  if (document.getElementById('check-machines')?.checked) {
+    State.enabledSlides.push(1);
+    State.enabledSlides.push(2);
   }
 }
 
-function populateSettings() {
-  const container = document.getElementById('slideToggles');
-  if (!container) return;
-
-  const slides = [
-    { id: 'slide-0', name: 'Performance Overview' },
-    { id: 'slide-1', name: 'Extrusion Machines' },
-    { id: 'slide-2', name: 'Zipper Machines' }
-  ];
-
-  container.innerHTML = slides.map(s => `
-    <label class="slide-toggle-item">
-      <input type="checkbox" checked onchange="toggleSlide('${s.id}', this.checked)">
-      <span>${s.name}</span>
-    </label>
-  `).join('');
+function applySettingsFromUI() {
+  const zoomRange = document.getElementById('zoomRange');
+  const slideSpeedRange = document.getElementById('slideSpeedRange');
+  const scrollSpeedRange = document.getElementById('scrollSpeedRange');
+  const focusSpeedRange = document.getElementById('focusSpeedRange');
+  
+  if (zoomRange) {
+    const val = zoomRange.value;
+    document.getElementById('zoomVal').innerText = val + '%';
+    document.querySelector('main').style.transform = `scale(${val / 100})`;
+    document.querySelector('main').style.transformOrigin = 'top center';
+  }
+  
+  if (slideSpeedRange) {
+    const val = slideSpeedRange.value;
+    document.getElementById('slideSpeedVal').innerText = val + 's';
+    State.interval = val * 1000;
+  }
+  
+  if (scrollSpeedRange) {
+    const val = scrollSpeedRange.value;
+    document.getElementById('scrollSpeedVal').innerText = val + 's';
+    const ticker = document.getElementById('live-ticker');
+    if (ticker) ticker.style.animationDuration = val + 's';
+  }
+  
+  if (focusSpeedRange) {
+    const val = focusSpeedRange.value;
+    document.getElementById('focusSpeedVal').innerText = val + 's';
+    State.focusDuration = val * 1000;
+  }
+  
+  updateEnabledSlides();
 }
 
 function goToSlide(index) {
@@ -303,27 +379,46 @@ function renderFocusSlide(m) {
   const statusClass = m.status.includes('idle') ? 'tag-idle' : (m.status.includes('bd') || m.status.includes('breakdown') ? 'tag-bd' : 'tag-run');
   
   const hasReason = (m.status.includes('breakdown') || m.status.includes('bd') || m.status.includes('idle')) && m.reason;
-  const reasonHtml = hasReason ? `<div class="focus-reason">REASON: ${m.reason}</div>` : '';
+  
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 
   container.innerHTML = `
-    <div class="focus-card">
-      <div class="focus-head">
-        <div class="focus-id">${m.id}</div>
-        <div class="focus-status ${statusClass}">${m.status}</div>
+    <div class="focus-card-premium ${statusClass}">
+      <div class="focus-accent-bar"></div>
+      <div class="focus-header">
+        <div class="focus-title">${m.id}</div>
+        <div class="focus-status-pill ${statusClass}">
+          <span class="status-dot"></span>
+          <span>${m.status.toUpperCase()}</span>
+        </div>
+        <div class="focus-update-time">🕒 UPDATED: ${timeStr}</div>
       </div>
       <div class="focus-body">
-        <div class="focus-circle-wrap">
-          <svg viewBox="0 0 36 36" style="width:100%; height:100%;">
-            <path class="m-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke-width:3;" />
-            <path id="focus-path-anim" class="m-circle-fg" stroke="${getProgColor(pct)}" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke-width:3; transition: stroke-dasharray 1s ease-out;" />
-          </svg>
-          <div class="focus-pct" id="focus-pct-anim">0%</div>
+        <div class="focus-left">
+          <div class="focus-circle-wrap">
+            <svg viewBox="0 0 36 36" style="width:100%; height:100%;">
+              <path class="m-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke-width:2;" />
+              <path id="focus-path-anim" class="m-circle-fg" stroke="${getProgColor(pct)}" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke-width:2; transition: stroke-dasharray 1s ease-out;" />
+            </svg>
+            <div class="focus-pct-val">
+              <span id="focus-pct-anim">0%</span>
+              <div style="font-size:12px; font-weight:800; color:var(--text-muted); margin-top:5px;">ACHIEVEMENT</div>
+            </div>
+          </div>
         </div>
-        <div class="focus-info">
-          <div class="focus-val-p" id="focus-prod-anim">0 <span style="font-size:20px; color:var(--text-muted);">KGS</span></div>
-          <div class="focus-val-t">TARGET: ${m.target.toLocaleString()} KGS</div>
-          ${reasonHtml}
+        <div class="focus-right">
+          <div class="focus-lbl">PRODUCTION UNITS</div>
+          <div class="focus-big-val" id="focus-prod-anim">0 KGS</div>
+          
+          <div class="focus-lbl" style="margin-top:20px;">DAILY TARGET</div>
+          <div class="focus-sub-val">${m.target.toLocaleString()} <span style="font-size:24px; color:var(--text-muted);">KGS</span></div>
+          
+          ${hasReason ? `<div class="focus-reason-box ${statusClass}">${m.reason}</div>` : ''}
         </div>
+      </div>
+      <div class="focus-footer">
+        MACHINE MONITORING ${State.focusIndex + 1} OF ${State.focusQueue.length}
       </div>
     </div>
   `;
@@ -334,7 +429,7 @@ function renderFocusSlide(m) {
     if (path) path.style.strokeDasharray = `${pct}, 100`;
     
     animateValue('focus-pct-anim', 0, pct, 1000, '%');
-    animateValue('focus-prod-anim', 0, m.prod, 1000, ' <span style="font-size:20px; color:var(--text-muted);">KGS</span>');
+    animateValue('focus-prod-anim', 0, m.prod, 1000, ' KGS');
   }, 50);
 }
 
@@ -697,35 +792,32 @@ function renderMachineGrid(id, machines) {
     if (m.status.includes('breakdown') || m.status.includes('bd')) statusClass = 'tag-bd';
 
     // Update ID and Status
-    card.querySelector('.m-id-text').innerText = m.id;
-    const statusTag = card.querySelector('.m-status-tag');
-    statusTag.innerText = m.status;
-    statusTag.className = `m-status-tag ${statusClass}`;
+    card.querySelector('.m-card-title').innerText = m.id;
+    const statusPill = card.querySelector('.m-card-status-pill');
+    statusPill.className = `m-card-status-pill ${statusClass}`;
+    statusPill.querySelector('span:last-child').innerText = m.status.toUpperCase();
 
     // Update Progress Circle
     const circleFg = card.querySelector('.m-circle-fg');
     circleFg.setAttribute('stroke', getProgColor(pct));
     circleFg.setAttribute('stroke-dasharray', `${pct}, 100`);
-    card.querySelector('.m-pct').innerText = `${pct}%`;
+    card.querySelector('.m-card-pct').innerText = `${pct}%`;
 
     // Update Values
-    card.querySelector('.m-val-p').childNodes[0].textContent = m.prod.toLocaleString() + ' ';
-    card.querySelector('.m-val-t').innerText = `TARGET: ${m.target.toLocaleString()} KGS`;
+    card.querySelector('.big-val').innerText = m.prod.toLocaleString();
+    card.querySelector('.target-lbl').innerText = `TARGET: ${m.target.toLocaleString()} KGS`;
 
     // Update Reason
-    let reasonEl = card.querySelector('.m-reason');
+    let reasonEl = card.querySelector('.footer-reason');
     const hasReason = (m.status.includes('breakdown') || m.status.includes('bd') || m.status.includes('idle')) && m.reason;
     if (hasReason) {
       if (!reasonEl) {
         reasonEl = document.createElement('div');
-        reasonEl.className = 'm-reason';
-        reasonEl.style = "margin-top:10px; font-size:12px; color:var(--accent-red); background:rgba(239, 68, 68, 0.1); padding:5px 8px; border-radius:4px; border:1px solid rgba(239, 68, 68, 0.2); font-weight:700;";
-        card.appendChild(reasonEl);
+        reasonEl.className = `footer-reason ${statusClass}`;
+        card.querySelector('.m-card-footer').appendChild(reasonEl);
       }
-      reasonEl.innerText = `REASON: ${m.reason}`;
-      reasonEl.style.color = m.status.includes('idle') ? 'var(--accent-orange)' : 'var(--accent-red)';
-      reasonEl.style.backgroundColor = m.status.includes('idle') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-      reasonEl.style.borderColor = m.status.includes('idle') ? 'rgba(249, 115, 22, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+      reasonEl.innerText = m.reason;
+      reasonEl.className = `footer-reason ${statusClass}`;
     } else if (reasonEl) {
       reasonEl.remove();
     }
@@ -739,34 +831,38 @@ function createMachineCardHTML(m) {
   if (m.status.includes('breakdown') || m.status.includes('bd')) statusClass = 'tag-bd';
 
   const hasReason = (m.status.includes('breakdown') || m.status.includes('bd') || m.status.includes('idle')) && m.reason;
-  const reasonColor = m.status.includes('idle') ? 'var(--accent-orange)' : 'var(--accent-red)';
-  const reasonBg = m.status.includes('idle') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-  const reasonBorder = m.status.includes('idle') ? 'rgba(249, 115, 22, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-
-  const reasonHtml = hasReason
-    ? `<div class="m-reason" style="margin-top:10px; font-size:12px; color:${reasonColor}; background:${reasonBg}; padding:5px 8px; border-radius:4px; border:1px solid ${reasonBorder}; font-weight:700;">REASON: ${m.reason}</div>`
-    : '';
+  
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 
   return `
-    <div class="m-card-compact" data-id="${m.id}">
-      <div class="m-id-row">
-        <span class="m-id-text">${m.id}</span>
-        <span class="m-status-tag ${statusClass}">${m.status}</span>
+    <div class="m-card-premium ${statusClass}" data-id="${m.id}">
+      <div class="m-card-accent-bar"></div>
+      <div class="m-card-header">
+        <div class="m-card-title">${m.id}</div>
+        <div class="m-card-status-pill ${statusClass}">
+          <span class="status-dot"></span>
+          <span>${m.status.toUpperCase()}</span>
+        </div>
       </div>
-      <div class="m-body-compact">
-        <div class="m-circle-wrap">
+      <div class="m-card-body">
+        <div class="m-card-main-val">
+          <div class="big-val">${m.prod.toLocaleString()}</div>
+          <div class="unit-lbl">KGS</div>
+          <div class="target-lbl">TARGET: ${m.target.toLocaleString()} KGS</div>
+        </div>
+        <div class="m-card-circle-wrap">
           <svg class="m-circle-svg" viewBox="0 0 36 36">
             <path class="m-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
             <path class="m-circle-fg" stroke="${getProgColor(pct)}" stroke-dasharray="${pct}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
           </svg>
-          <div class="m-pct">${pct}%</div>
-        </div>
-        <div class="m-info-compact">
-          <div class="m-val-p">${m.prod.toLocaleString()} <span style="font-size:10px; color:var(--text-muted); font-weight:700;">KGS</span></div>
-          <div class="m-val-t">TARGET: ${m.target.toLocaleString()} KGS</div>
+          <div class="m-card-pct">${pct}%</div>
         </div>
       </div>
-      ${reasonHtml}
+      <div class="m-card-footer">
+        <div class="footer-time">🕒 ${timeStr}</div>
+        ${hasReason ? `<div class="footer-reason ${statusClass}">${m.reason}</div>` : ''}
+      </div>
     </div>
   `;
 }

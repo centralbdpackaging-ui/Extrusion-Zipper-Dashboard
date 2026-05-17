@@ -277,21 +277,21 @@
           </section>
 
           <!-- Slide 1: Extrusion Detailed View -->
-          <section class="slide" id="slide-1">
+          <section class="slide slide-full" id="slide-1">
             <div class="section-block" style="height:100%;">
               <div class="m-grid-compact" id="ex-grid"></div>
             </div>
           </section>
 
           <!-- Slide 2: Zipper Detailed View -->
-          <section class="slide" id="slide-2">
+          <section class="slide slide-full" id="slide-2">
             <div class="section-block" style="height:100%;">
               <div class="m-grid-compact" id="zp-grid"></div>
             </div>
           </section>
 
           <!-- Slide Focus: Single Machine Detail -->
-          <section class="slide" id="slide-focus">
+          <section class="slide slide-full" id="slide-focus">
             <div id="focus-container" style="height:100%; display:flex; align-items:center; justify-content:center;">
               <!-- Dynamic content here -->
             </div>
@@ -325,69 +325,111 @@
           <button id="closeModalBtn" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
         </div>
         <div class="modal-body">
-          <!-- Slide Toggles -->
-          <div class="control-btns" id="slideToggles">
-            <!-- Dynamic checkboxes will go here -->
-          </div>
-
-          <hr style="opacity:0.1; margin:20px 0;">
-
-          <!-- Language -->
-          <div class="setting-item">
-            <label data-en="Language" data-bn="ভাষা">Language</label>
-            <select id="langSelect" class="st-input">
-              <option value="en">English</option>
-              <option value="bn">বাংলা (Bengali)</option>
-            </select>
-          </div>
-
-          <!-- Zoom Level -->
-          <div class="setting-item">
-            <div class="st-label-row">
-              <label data-en="Zoom Level" data-bn="জুম লেভেল">Zoom Level</label>
-              <span id="zoomVal">100%</span>
+          <!-- SLIDE VISIBILITY -->
+          <div class="settings-card">
+            <div class="card-title">SLIDE VISIBILITY</div>
+            <div class="checkbox-grid">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="check-summary" checked>
+                <span>Summary</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="check-machines" checked>
+                <span>Machines</span>
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="check-focus" checked>
+                <span>Focus</span>
+              </label>
             </div>
-            <input type="range" id="zoomRange" min="50" max="150" value="100" class="st-range">
           </div>
 
-          <!-- Slide Speed -->
-          <div class="setting-item">
-            <div class="st-label-row">
-              <label data-en="Slide Speed" data-bn="স্লাইড স্পিড">Slide Speed</label>
-              <span id="slideSpeedVal">15s</span>
+          <!-- DISPLAY & THEME -->
+          <div class="settings-card">
+            <div class="card-title">DISPLAY & THEME</div>
+            
+            <div class="setting-item">
+              <label>Resolution Preset</label>
+              <select class="st-input" id="resPreset">
+                <option>Default (100%)</option>
+                <option>Fit to Screen</option>
+                <option>4K UHD</option>
+              </select>
             </div>
-            <input type="range" id="slideSpeedRange" min="5" max="300" value="15" class="st-range">
-          </div>
 
-          <!-- Scroll Speed (Ticker) -->
-          <div class="setting-item">
-            <div class="st-label-row">
-              <label data-en="Scroll Speed" data-bn="স্ক্রল স্পিড">Scroll Speed</label>
-              <span id="scrollSpeedVal">60s</span>
+            <div class="setting-item">
+              <div class="st-label-row">
+                <label>Custom Zoom</label>
+                <span id="zoomVal" style="color:var(--accent-blue)">100%</span>
+              </div>
+              <input type="range" id="zoomRange" min="50" max="150" value="100" class="st-range">
             </div>
-            <input type="range" id="scrollSpeedRange" min="10" max="300" value="60" class="st-range">
+
+            <div class="setting-item">
+              <label>Accent Color</label>
+              <div class="color-swatches">
+                <div class="swatch active" style="background:#3b82f6;" data-color="#3b82f6"></div>
+                <div class="swatch" style="background:#10b981;" data-color="#10b981"></div>
+                <div class="swatch" style="background:#f59e0b;" data-color="#f59e0b"></div>
+                <div class="swatch" style="background:#ef4444;" data-color="#ef4444"></div>
+              </div>
+            </div>
           </div>
 
-          <!-- Auto Slide -->
-          <div class="setting-item" style="flex-direction:row; justify-content:space-between; align-items:center; margin-top:10px;">
-            <label data-en="Enable Auto-Slide" data-bn="অটো স্লাইড চালু করুন">Enable Auto-Slide</label>
-            <input type="checkbox" id="autoSlideCheck" checked>
+          <!-- TIMING & ROTATION -->
+          <div class="settings-card">
+            <div class="card-title">TIMING & ROTATION</div>
+            
+            <div class="setting-item">
+              <div class="st-label-row">
+                <label>Slide Rotation</label>
+                <span id="slideSpeedVal" style="color:var(--accent-blue)">20s</span>
+              </div>
+              <div class="range-with-btns">
+                <button class="range-btn" id="slideSpeedMinus">-</button>
+                <input type="range" id="slideSpeedRange" min="5" max="300" value="20" class="st-range">
+                <button class="range-btn" id="slideSpeedPlus">+</button>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="st-label-row">
+                <label>Scroll Speed</label>
+                <span id="scrollSpeedVal" style="color:var(--accent-blue)">300s</span>
+              </div>
+              <div class="range-with-btns">
+                <button class="range-btn" id="scrollSpeedMinus">-</button>
+                <input type="range" id="scrollSpeedRange" min="10" max="600" value="300" class="st-range">
+                <button class="range-btn" id="scrollSpeedPlus">+</button>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="st-label-row">
+                <label>Focus Rotation</label>
+                <span id="focusSpeedVal" style="color:var(--accent-blue)">3s</span>
+              </div>
+              <div class="range-with-btns">
+                <button class="range-btn" id="focusSpeedMinus">-</button>
+                <input type="range" id="focusSpeedRange" min="1" max="30" value="3" class="st-range">
+                <button class="range-btn" id="focusSpeedPlus">+</button>
+              </div>
+            </div>
           </div>
 
           <div class="modal-footer-btns">
             <button class="btn-st" id="exportBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-s"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              <span>Export Config</span>
+              <span>Export</span>
             </button>
             <button class="btn-st" id="testConnBtn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-s"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              <span>Test Live Data</span>
+              <span>Test Sync</span>
             </button>
           </div>
           <!-- Connection status text -->
           <div id="connectionStatus" style="margin-top:10px; font-size:14px; font-weight:700; color:var(--accent-green); text-align:center; display:none;"></div>
 
-          </div>
         </div>
       </div>
     </aside>
