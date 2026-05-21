@@ -151,7 +151,10 @@ main {
 .kpi-lbl { font-size: 18px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
 .kpi-val-group { display: flex; align-items: baseline; gap: 10px; z-index: 2; }
 .kpi-val { font-size: 72px; font-weight: 950; color: #fff; line-height: 1; text-shadow: 0 0 30px rgba(255,255,255,0.15); letter-spacing: -2px; }
-.kpi-unit { font-size: 18px; color: var(--text-muted); font-weight: 800; }
+.kpi-unit { font-size: 22px; color: var(--accent-blue); font-weight: 800; text-shadow: 0 0 6px var(--glow-blue); }
+
+.kpi-card.blue .kpi-val { font-size: 84px; }
+.kpi-card.blue .kpi-lbl { color: var(--accent-blue); }
 .kpi-sub { font-size: 16px; color: var(--text-muted); z-index: 2; font-weight: 600; opacity: 0.9; }
 
 .kpi-icon-box {
@@ -246,7 +249,7 @@ main {
 .m-card-main-val { display: flex; flex-direction: column; }
 .big-val { font-size: 32px; font-weight: 900; color: #fff; line-height: 1; }
 .unit-lbl { font-size: 12px; font-weight: 800; color: var(--text-muted); margin-top: 2px; }
-.target-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); opacity: 0.7; margin-top: 5px; }
+.target-lbl { font-size: 16px; font-weight: 800; color: #fff; opacity: 1; margin-top: 6px; }
 
 .m-card-circle-wrap { width: 45px; height: 45px; position: relative; }
 .m-card-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
