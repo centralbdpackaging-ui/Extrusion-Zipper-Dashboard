@@ -254,7 +254,7 @@ main {
 .m-card-circle-wrap { width: 45px; height: 45px; position: relative; }
 .m-card-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
 
-.m-circle-bg { fill: transparent; }
+.m-circle-bg { fill: rgba(255, 255, 255, 0.02); stroke: rgba(255, 255, 255, 0.1); }
 .m-circle-fg { fill: transparent; }
 
 .m-card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 10px; }
