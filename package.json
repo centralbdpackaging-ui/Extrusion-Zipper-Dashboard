@@ -1,0 +1,15 @@
+{
+  "name": "production-dashboard-2026",
+  "version": "1.0.0",
+  "description": "Premium Production Dashboard for Hourly Cutting",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y lite-server"
+  },
+  "keywords": [],
+  "author": "Antigravity",
+  "license": "ISC",
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  }
+}
